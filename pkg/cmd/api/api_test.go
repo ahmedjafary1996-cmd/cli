@@ -1360,7 +1360,7 @@ func Test_apiRun_cache(t *testing.T) {
 				AuthenticationFunc: func() gh.AuthConfig {
 					cfg := &config.AuthConfig{}
 					// Required because the http client tries to get the active token and otherwise
-					// this goes down to to go-gh config and panics. Pretty bad solution, it would
+					// this goes down to go-gh config and panics. Pretty bad solution, it would
 					// be better if this were black box.
 					cfg.SetActiveToken("token", "stub")
 					return cfg
@@ -1386,6 +1386,36 @@ func Test_apiRun_cache(t *testing.T) {
 	assert.Equal(t, 1, requestCount)
 	assert.Equal(t, "", stdout.String(), "stdout")
 	assert.Equal(t, "", stderr.String(), "stderr")
+}
+
+func Test_apiRun_invokingAgent(t *testing.T) {
+	var receivedUA string
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedUA = r.Header.Get("User-Agent")
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(s.Close)
+
+	ios, _, _, _ := iostreams.Test()
+	options := ApiOptions{
+		IO:            ios,
+		AppVersion:    "1.2.3",
+		InvokingAgent: "copilot-cli",
+		Config: func() (gh.Config, error) {
+			return &ghmock.ConfigMock{
+				AuthenticationFunc: func() gh.AuthConfig {
+					cfg := &config.AuthConfig{}
+					cfg.SetActiveToken("token", "stub")
+					return cfg
+				},
+			}, nil
+		},
+		RequestPath: s.URL,
+	}
+
+	require.NoError(t, apiRun(&options))
+	assert.Contains(t, receivedUA, "GitHub CLI 1.2.3")
+	assert.Contains(t, receivedUA, "Agent/copilot-cli")
 }
 
 func Test_openUserFile(t *testing.T) {

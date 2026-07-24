@@ -79,8 +79,9 @@ type IOStreams struct {
 	pagerCommand string
 	pagerProcess *os.Process
 
-	neverPrompt               bool
-	accessiblePrompterEnabled bool
+	neverPrompt                 bool
+	accessiblePrompterEnabled   bool
+	experimentalPrompterEnabled bool
 
 	TempFileOverride *os.File
 }
@@ -345,7 +346,7 @@ func (s *IOStreams) startTextualProgressIndicator(label string) {
 }
 
 // StopProgressIndicator stops the progress indicator if it is running.
-// Note that a textual progess indicator does not create a progress indicator,
+// Note that a textual progress indicator does not create a progress indicator,
 // so this method is a no-op in that case.
 func (s *IOStreams) StopProgressIndicator() {
 	s.progressIndicatorMu.Lock()
@@ -464,6 +465,14 @@ func (s *IOStreams) SetAccessiblePrompterEnabled(enabled bool) {
 
 func (s *IOStreams) AccessiblePrompterEnabled() bool {
 	return s.accessiblePrompterEnabled
+}
+
+func (s *IOStreams) SetExperimentalPrompterEnabled(enabled bool) {
+	s.experimentalPrompterEnabled = enabled
+}
+
+func (s *IOStreams) ExperimentalPrompterEnabled() bool {
+	return s.experimentalPrompterEnabled
 }
 
 func System() *IOStreams {

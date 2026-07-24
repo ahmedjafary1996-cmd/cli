@@ -20,6 +20,9 @@ builds:
     goos: [darwin]
     goarch: [amd64, arm64]
     hooks:
+      pre:
+        - cmd: bash ./script/licenses {{ .Os }} {{ .Arch }}
+          output: true
       post:
         - cmd: ./script/sign '{{ .Path }}'
           output: true
@@ -33,6 +36,10 @@ builds:
     goarch: ["386", arm, amd64, arm64]
     env:
       - CGO_ENABLED=0
+    hooks:
+      pre:
+        - cmd: bash ./script/licenses {{ .Os }} {{ .Arch }}
+          output: true
     binary: bin/gh
     main: ./cmd/gh
     ldflags:
@@ -42,6 +49,9 @@ builds:
     goos: [windows]
     goarch: ["386", amd64, arm64]
     hooks:
+      pre:
+        - cmd: bash ./script/licenses {{ .Os }} {{ .Arch }}
+          output: true
       post:
         - cmd: pwsh .\script\sign.ps1 '{{ .Path }}'
           output: true
@@ -96,3 +106,8 @@ nfpms: #build:linux
         dst: "/usr/share/fish/vendor_completions.d/gh.fish"
       - src: "./share/zsh/site-functions/_gh"
         dst: "/usr/share/zsh/site-functions/_gh"
+      # Debian/Ubuntu zsh does not look in /usr/share/zsh/site-functions by default,
+      # so we also install to vendor-completions. See https://github.com/cli/cli/issues/13166
+      - src: "./share/zsh/vendor-completions/_gh"
+        dst: "/usr/share/zsh/vendor-completions/_gh"
+        packager: deb
